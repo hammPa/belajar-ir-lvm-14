@@ -238,9 +238,86 @@ int main(){
     builder.SetInsertPoint(loopEndBB);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // function declaration
+    // fun add(int f, int s) - int
+    std::vector<llvm::Type*> Integers(2, builder.getInt32Ty());
+    llvm::FunctionType *addFuncType = llvm::FunctionType::get(builder.getInt32Ty(), Integers, false);
+    llvm::Function *addFunc = llvm::Function::Create(
+        addFuncType,
+        llvm::Function::ExternalLinkage,
+        "add",
+        module.get()
+    );
+
+    // entry block fungsi
+    llvm::BasicBlock *addFuncEntry = llvm::BasicBlock::Create(context, "addFuncEntry", addFunc);
+    builder.SetInsertPoint(addFuncEntry);
+
+    // ambil argument
+    auto argsIter = addFunc->arg_begin();
+    llvm::Value* fArgs = argsIter++;
+    fArgs->setName("f");
+    llvm::Value* sArg = argsIter++;
+    sArg->setName("s");
+
+    // operasi return f + s
+    llvm::Value* addFuncSum = builder.CreateAdd(fArgs, sArg, "addFuncSum");
+    builder.CreateRet(addFuncSum);
+
+
+
+    // func call
+    // set insert point ke main setelah loopEndBB
+    builder.SetInsertPoint(loopEndBB);
+    // cari fungsi add di module
+    llvm::Function *getAddFunc = module->getFunction("add");
+    if(!getAddFunc){
+        // error
+    }
+
+    // buat  args
+    llvm::Value* arg1 = llvm::ConstantInt::get(builder.getInt32Ty(), 4);
+    llvm::Value* arg2 = llvm::ConstantInt::get(builder.getInt32Ty(), 6);    
+    std::vector<llvm::Value*> argsV = {arg1, arg2};
+
+    // generate call
+    llvm::Value *callResult = builder.CreateCall(getAddFunc, argsV, "calltmp");
+
+    // print hasil
+    genPrintInt(callResult);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     builder.CreateRet(builder.getInt32(0));
     module->print(llvm::outs(), nullptr);
-
 
 
 
