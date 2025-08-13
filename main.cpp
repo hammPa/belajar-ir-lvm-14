@@ -1,4 +1,3 @@
-// #include <llvm-14/llvm/IR/IRBuilder.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
@@ -107,7 +106,7 @@ int main(){
 
     // var a = 10;
     llvm::AllocaInst* allocA = createEntryBlockAlloca(mainFunc, "a");
-    builder.CreateStore(builder.getInt32(8888777), allocA);
+    builder.CreateStore(builder.getInt32(10), allocA);
     NamedValues["a"] = allocA;
 
     // load dan print
@@ -118,31 +117,78 @@ int main(){
 
 
     // if(a >= 10)
-    llvm::Value* cond = builder.CreateICmpSGE(loadA, builder.getInt32(8888777), "cmp");
+    // llvm::Value* cond = builder.CreateICmpSGE(loadA, builder.getInt32(10), "cmp");
 
     // block then dan merge
-    llvm::BasicBlock* thenBB = llvm::BasicBlock::Create(context, "then", mainFunc);
-    llvm::BasicBlock* mergeBB = llvm::BasicBlock::Create(context, "merge");
+    // llvm::BasicBlock* thenBB = llvm::BasicBlock::Create(context, "then", mainFunc);
+    // llvm::BasicBlock* mergeBB = llvm::BasicBlock::Create(context, "merge");
     
 
     // conditional branch
-    builder.CreateCondBr(cond, thenBB, mergeBB);
+    // builder.CreateCondBr(cond, thenBB, mergeBB);
 
     // isi blok then
+    // builder.SetInsertPoint(thenBB);
+    // llvm::Value* text = builder.CreateGlobalStringPtr("angka 10\n");
+    // genPrintString(text);
+    // builder.CreateBr(mergeBB);
+
+    // masukkan merge ke block function
+    // mainFunc->getBasicBlockList().push_back(mergeBB);
+    // builder.SetInsertPoint(mergeBB);
+
+
+
+
+
+    // if(a <= 3){ printf("if"); }
+    // elif(a <= 6) { printf("elif"); }
+    // else { printf("else"); }
+
+    llvm::BasicBlock *thenBB = llvm::BasicBlock::Create(context, "then", mainFunc);
+    llvm::BasicBlock *elifBB = llvm::BasicBlock::Create(context, "elif", mainFunc);
+    llvm::BasicBlock *thenBB2 = llvm::BasicBlock::Create(context, "then2", mainFunc);
+    llvm::BasicBlock *elseBB = llvm::BasicBlock::Create(context, "else", mainFunc);
+    llvm::BasicBlock *mergeBB = llvm::BasicBlock::Create(context, "merge", mainFunc);
+    
+    // kondisi if
+    llvm::Value* condIf = builder.CreateICmpSLE(loadA, builder.getInt32(3), "ifcond");
+    builder.CreateCondBr(condIf, thenBB, elifBB);
+
+    // block then
     builder.SetInsertPoint(thenBB);
-    llvm::Value* text = builder.CreateGlobalStringPtr("angka 8888777\n");
+    llvm::Value *text = builder.CreateGlobalStringPtr("if block\n");
     genPrintString(text);
     builder.CreateBr(mergeBB);
 
-    // masukkan merge ke block function
-    mainFunc->getBasicBlockList().push_back(mergeBB);
+    // kondisi elif
+    builder.SetInsertPoint(elifBB);
+    llvm::Value *condElif = builder.CreateICmpSLE(loadA, builder.getInt32(6), "elifcond");
+    builder.CreateCondBr(condElif, thenBB2, elseBB);
+
+    // then elif
+    builder.SetInsertPoint(thenBB2);
+    llvm::Value *text2 = builder.CreateGlobalStringPtr("elif block\n");
+    genPrintString(text2);
+    builder.CreateBr(mergeBB);
+
+    // block else
+    builder.SetInsertPoint(elseBB);
+    llvm::Value *text3 = builder.CreateGlobalStringPtr("else block\n");
+    genPrintString(text3);
+    builder.CreateBr(mergeBB);
+
+    // block merge
     builder.SetInsertPoint(mergeBB);
+
+
+
+
+
 
 
     builder.CreateRet(builder.getInt32(0));
     module->print(llvm::outs(), nullptr);
-
-
 
 
 
