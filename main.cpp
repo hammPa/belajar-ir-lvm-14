@@ -187,6 +187,57 @@ int main(){
 
 
 
+    // buat variabel i
+    llvm::AllocaInst *allocI = createEntryBlockAlloca(mainFunc, "i");
+
+    // i = 0
+    builder.CreateStore(builder.getInt32(0), allocI);
+
+    // basic block loop cond, loop body, loop inc, loop end
+    llvm::BasicBlock *loopCondBB = llvm::BasicBlock::Create(context, "loop_cond", mainFunc);
+    llvm::BasicBlock *loopBodyBB = llvm::BasicBlock::Create(context, "loop_body", mainFunc);
+    llvm::BasicBlock *loopIncBB = llvm::BasicBlock::Create(context, "loop_inc", mainFunc);
+    llvm::BasicBlock *loopEndBB = llvm::BasicBlock::Create(context, "loop_end", mainFunc);
+
+
+    // branch dari entry ke loop cond
+    builder.CreateBr(loopCondBB);
+
+    // set insert point ke loop_cond
+    builder.SetInsertPoint(loopCondBB);
+
+    // load i
+    llvm::Value *currentI = builder.CreateLoad(builder.getInt32Ty(), allocI, "i");
+
+    llvm::Value *cond = builder.CreateICmpSLE(currentI, builder.getInt32(5 - 1), "loopcond");
+
+
+    // branch kondisional ke body atau loop end
+    builder.CreateCondBr(cond, loopBodyBB, loopEndBB);
+
+    // isi loop_body
+    builder.SetInsertPoint(loopBodyBB);
+
+    // panggil print(i)
+    genPrintInt(currentI);
+
+    // lanjut ke loop_inc
+    builder.CreateBr(loopIncBB);
+
+    // isi loop_inc
+    builder.SetInsertPoint(loopIncBB);
+
+    // increment i
+    llvm::Value *nextI = builder.CreateAdd(currentI, builder.getInt32(1), "nexti");
+    builder.CreateStore(nextI, allocI);
+
+    // balik lagi ke loop_cond
+    builder.CreateBr(loopCondBB);
+
+    // set insert point ke loop_end untuk instruksi setelah loop
+    builder.SetInsertPoint(loopEndBB);
+
+
     builder.CreateRet(builder.getInt32(0));
     module->print(llvm::outs(), nullptr);
 
